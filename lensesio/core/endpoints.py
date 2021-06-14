@@ -2,7 +2,8 @@ class lensesEndpoints():
 
     def adminEndpoint(self):
         self.lensesAdminAuditsEndpoint = "/api/audit"
-        self.lensesAdminAlertsEndpoint = "/api/alerts"
+        self.lensesAdminAlertsEndpoint = "/api/v1/alert/settings"
+        self.lensesAdminAlertsChannelsEndpoint= "/api/v1/alert/channels"
         self.lensesConfigInfoEndpoint = "/api/config"
         self.lensesLogsEndpoint = "/api/logs"
         self.lensesGroupsEndpoint = "/api/v1/group"

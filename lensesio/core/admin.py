@@ -1,7 +1,6 @@
 from lensesio.core.endpoints import getEndpoints
 from lensesio.core.exec_action import exec_request
 
-
 class AdminPanel:
 
     def __init__(self, verify_cert=True):
@@ -11,6 +10,7 @@ class AdminPanel:
         self.admin_config_info_endpoint = self.url + self.lensesConfigInfoEndpoint
         self.admin_audits_endpoint = self.url + self.lensesAdminAuditsEndpoint
         self.admin_alerts_endpoint = self.url + self.lensesAdminAlertsEndpoint
+        self.admin_alert_channels_endpoint = self.url + self.lensesAdminAlertsChannelsEndpoint
         self.admin_logs_endpoint = self.url + self.lensesLogsEndpoint
         self.admin_groups_endpoint = self.url + self.lensesGroupsEndpoint
         self.admin_users_endpoint = self.url + self.lensesUsersEndpoint
@@ -341,7 +341,24 @@ class AdminPanel:
         else:
             return self.audits
 
-    def Alerts(self, pageSize=999999999):
+    def GetAlertChannels(self, templateName = None, channelName= None, pageSize=999999999):
+        __RQE = self.admin_alert_channels_endpoint
+        __RQE = __RQE + '?pageSize=%s' % pageSize
+        if templateName:
+            __RQE = __RQE + '&templateName=' + templateName
+        if channelName:
+            __RQE = __RQE + '&channelName=' + channelName
+            
+        self.channels = exec_request(
+            __METHOD="get",
+            __EXPECTED="json",
+            __URL=__RQE,
+            __HEADERS=self.admin_x_headers,
+            __VERIFY=self.verify_cert
+        )
+        return self.channels
+
+    def GetAlerts(self, pageSize=999999999):
         __RQE = self.admin_alerts_endpoint
         __RQE = __RQE + '?pageSize=%s' % pageSize
         self.alerts = exec_request(
@@ -351,11 +368,59 @@ class AdminPanel:
             __HEADERS=self.admin_x_headers,
             __VERIFY=self.verify_cert
         )
+        return self.alerts
 
-        if type(self.alerts) is dict:
-            return self.alerts['values']
-        else:
-            return self.alerts
+    def GetConsumerAlerts(self):
+        return self.GetAlerts()["categories"]["Consumers"][0]
+
+    def CreateConsumerAlert(self, group, topic, threshold, channels):
+        # group: string
+        # topic string
+        # threshold: numeric
+        # channels: list
+        __RQE = self.admin_alerts_endpoint + '/2000/conditions'
+        payload = {
+                    "condition": {
+                        "group": group,
+                        "topic": topic,
+                        "threshold": threshold
+                    },
+                    "channels": channels
+                    }
+        self.createConsumerAlert = exec_request(
+            __METHOD="post",
+            __EXPECTED="json",
+            __URL=__RQE,
+            __HEADERS=self.admin_x_headers,
+            __DATA=payload,
+            __VERIFY=self.verify_cert
+        )
+        return self.createConsumerAlert
+
+    def UpdateConsumerAlert(self, condition_uuid, group, topic, threshold, channels):
+        # uid
+        # group: string
+        # topic string
+        # threshold: numeric
+        # channels: list
+        __RQE = self.admin_alerts_endpoint + f'/2000/conditions/{condition_uuid}'
+        payload = {
+                    "condition": {
+                        "group": group,
+                        "topic": topic,
+                        "threshold": threshold
+                    },
+                    "channels": channels
+                    }
+        self.createConsumerAlert = exec_request(
+            __METHOD="put",
+            __EXPECTED="text",
+            __URL=__RQE,
+            __HEADERS=self.admin_x_headers,
+            __DATA=payload,
+            __VERIFY=self.verify_cert
+        )
+        return self.createConsumerAlert
 
     def GetLogs(self, type='INFO'):
         __RQE = self.admin_logs_endpoint
